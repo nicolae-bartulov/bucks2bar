@@ -1,0 +1,16 @@
+{
+  "name": "bucks2bar",
+  "version": "1.0.0",
+  "description": "This is the documentation for the bucks2bar project.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "chai": "^5.1.2",
+    "jest": "^29.7.0"
+  }
+}
