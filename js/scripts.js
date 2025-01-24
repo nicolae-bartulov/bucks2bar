@@ -1,8 +1,8 @@
-document.addEventListener('DOMContentLoaded', function () {
-    var ctx = document.getElementById('myChart').getContext('2d');
-    var chartTab = document.getElementById('chart-tab');
+document.addEventListener('DOMContentLoaded', () => {
+    const ctx = document.querySelector('#myChart').getContext('2d');
+    const chartTab = document.querySelector('#chart-tab');
 
-    var myChart = new Chart(ctx, {
+    const myChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
@@ -29,38 +29,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    chartTab.addEventListener('click', function () {
-        // Income
-        var incomeJan = parseFloat(document.getElementById('income-january').value);
-        var incomeFeb = parseFloat(document.getElementById('income-february').value);
-        var incomeMar = parseFloat(document.getElementById('income-march').value);
-        var incomeApr = parseFloat(document.getElementById('income-april').value);
-        var incomeMay = parseFloat(document.getElementById('income-may').value);
-        var incomeJun = parseFloat(document.getElementById('income-june').value);
-        var incomeJul = parseFloat(document.getElementById('income-july').value);
-        var incomeAug = parseFloat(document.getElementById('income-august').value);
-        var incomeSep = parseFloat(document.getElementById('income-september').value);
-        var incomeOct = parseFloat(document.getElementById('income-october').value);
-        var incomeNov = parseFloat(document.getElementById('income-november').value);
-        var incomeDec = parseFloat(document.getElementById('income-december').value);
+    chartTab.addEventListener('click', () => {
+        const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+        const incomeData = months.map(month => parseFloat(document.querySelector(`#income-${month}`).value) || 0);
+        const expensesData = months.map(month => parseFloat(document.querySelector(`#expenses-${month}`).value) || 0);
 
-        var incomeData = [incomeJan, incomeFeb, incomeMar, incomeApr, incomeMay, incomeJun, incomeJul, incomeAug, incomeSep, incomeOct, incomeNov, incomeDec];
         console.log(incomeData);
-
-        var expensesJan = parseFloat(document.getElementById('expenses-january').value);
-        var expensesFeb = parseFloat(document.getElementById('expenses-february').value);
-        var expensesMar = parseFloat(document.getElementById('expenses-march').value);
-        var expensesApr = parseFloat(document.getElementById('expenses-april').value);
-        var expensesMay = parseFloat(document.getElementById('expenses-may').value);
-        var expensesJun = parseFloat(document.getElementById('expenses-june').value);
-        var expensesJul = parseFloat(document.getElementById('expenses-july').value);
-        var expensesAug = parseFloat(document.getElementById('expenses-august').value);
-        var expensesSep = parseFloat(document.getElementById('expenses-september').value);
-        var expensesOct = parseFloat(document.getElementById('expenses-october').value);
-        var expensesNov = parseFloat(document.getElementById('expenses-november').value);
-        var expensesDec = parseFloat(document.getElementById('expenses-december').value);
-
-        var expensesData = [expensesJan, expensesFeb, expensesMar, expensesApr, expensesMay, expensesJun, expensesJul, expensesAug, expensesSep, expensesOct, expensesNov, expensesDec];
         console.log(expensesData);
 
         myChart.data.datasets[0].data = incomeData;
@@ -69,23 +43,56 @@ document.addEventListener('DOMContentLoaded', function () {
         myChart.update();
     });
 
-    document.getElementById('download').addEventListener('click', function () {
-        var canvas = document.getElementById('myChart');
-        var link = document.createElement('a');
+    document.querySelector('#download').addEventListener('click', () => {
+        const canvas = document.querySelector('#myChart');
+        const link = document.createElement('a');
         link.href = canvas.toDataURL('image/png');
         link.download = 'chart.png';
         link.click();
-      });
-     // input with id "username" on change
-    document.getElementById('username').addEventListener('input', function () {
-        var username = document.getElementById('username').value;
-        // regex to check if the username has at leas 1 capital letter, 1 special character, 1 number and 8 characters
-        var regex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/;
-        // check if the username matches the regex and changes the border color
-        if (regex.test(username)) {
-            document.getElementById('username').style.borderColor = 'green';
-        } else {
-            document.getElementById('username').style.borderColor = 'red';
-        }
     });
+
+    document.querySelector('#username').addEventListener('input', () => {
+        const username = document.querySelector('#username').value;
+        const regex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/;
+        document.querySelector('#username').style.borderColor = regex.test(username) ? 'green' : 'red';
+    });
+
+    // Function to generate chart and get base64 image
+    function generateChartAndSendEmail() {
+        const canvas = document.querySelector('#myChart');
+        const chartImage = canvas.toDataURL('image/png');
+        const email = document.getElementById('email-address').value;
+
+        // Send the base64 image to the server
+        fetch('http://localhost:3000/send-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ image: chartImage, email: email })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Email sent successfully!');
+                } 
+                else if (data.error === 'Invalid email address') {
+                    alert('Failed to send email. Invalid email address.');
+                }
+                else if (data.error === 'Invalid image data') {
+                    alert('Failed to send email. Invalid image data.');
+                }
+                else if (data.error === 'Too many requests from this IP, please try again after 15 minutes') {
+                    alert('Failed to send email. Too many requests from this IP, please try again after 15 minutes.');
+                }
+                else {
+                    alert('Failed to send email. Please try again later.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+    // Add event listener for the send email button
+    document.querySelector('#send-email').addEventListener('click', generateChartAndSendEmail);
 });
